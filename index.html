@@ -1,92 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Multi-Agent Financial Due Diligence Dashboard</title>
-  <!-- Tabler Icons Link -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    :root{--c-bg:#ffffff;--c-bg2:#f8f9fa;--c-border:#dee2e6;--c-text:#212529;--c-muted:#6c757d;--c-blue:#185FA5;--c-blue-bg:#E6F1FB;--c-green:#3B6D11;--c-green-bg:#EAF3DE;--c-amber:#BA7517;--c-amber-bg:#FAEEDA;--c-red:#A32D2D;--c-red-bg:#FCEBEB;--c-purple:#534AB7;--c-purple-bg:#EEEDFE;--c-teal:#0F6E56;--c-teal-bg:#E1F5EE;--border-radius-md:6px}
-    @media(prefers-color-scheme:dark){:root{--c-bg:#1e1e1e;--c-bg2:#252526;--c-border:#3c3c3c;--c-text:#d4d4d4;--c-muted:#858585;--c-blue:#85B7EB;--c-blue-bg:#0C447C;--c-green:#97C459;--c-green-bg:#27500A;--c-amber:#EF9F27;--c-amber-bg:#633806;--c-red:#F09595;--c-red-bg:#791F1F;--c-purple:#AFA9EC;--c-purple-bg:#3C3489;--c-teal:#5DCAA5;--c-teal-bg:#085041}}
-    body{font-family:sans-serif;background:var(--c-bg);color:var(--c-text);font-size:14px}
-    .header{padding:16px 20px 12px;border-bottom:0.5px solid var(--c-border)}
-    .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-    .logo{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500}
-    .logo-dot{width:10px;height:10px;border-radius:50%;background:var(--c-blue)}
-    .status-row{display:flex;gap:8px;flex-wrap:wrap}
-    .badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
-    .badge-live{background:var(--c-green-bg);color:var(--c-green)}
-    .badge-ai{background:var(--c-purple-bg);color:var(--c-purple)}
-    .badge-warn{background:var(--c-amber-bg);color:var(--c-amber)}
-    .badge-risk{background:var(--c-red-bg);color:var(--c-red)}
-    .pipeline{display:flex;align-items:stretch;gap:0;padding:14px 20px;border-bottom:0.5px solid var(--c-border);overflow-x:auto}
-    .agent{flex:1;min-width:100px;padding:10px 8px;border:0.5px solid var(--c-border);background:var(--c-bg2);border-radius:var(--border-radius-md);position:relative;cursor:pointer;transition:border-color .2s}
-    .agent:hover{border-color:var(--c-muted)}
-    .agent.active{border-color:var(--c-purple);background:var(--c-purple-bg)}
-    .agent-arrow{display:flex;align-items:center;padding:0 4px;color:var(--c-muted);font-size:16px;flex-shrink:0}
-    .agent-icon{font-size:18px;margin-bottom:4px}
-    .agent-name{font-size:11px;font-weight:500;color:var(--c-text);margin-bottom:2px}
-    .agent-model{font-size:10px;color:var(--c-purple)}
-    .agent-api{font-size:10px;color:var(--c-muted)}
-    .ai-badge{position:absolute;top:5px;right:5px;font-size:9px;background:var(--c-purple-bg);color:var(--c-purple);padding:1px 5px;border-radius:10px;font-weight:500}
-    .main{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:0.5px solid var(--c-border)}
-    .panel{padding:16px 20px;border-right:0.5px solid var(--c-border)}
-    .panel:last-child{border-right:none}
-    .panel-title{font-size:12px;font-weight:500;color:var(--c-muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
-    .ai-tag{font-size:9px;background:var(--c-purple-bg);color:var(--c-purple);padding:2px 6px;border-radius:10px;font-weight:500;text-transform:none;letter-spacing:0}
-    .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-    .metric{background:var(--c-bg2);border-radius:var(--border-radius-md);padding:10px 12px}
-    .metric-label{font-size:11px;color:var(--c-muted);margin-bottom:4px}
-    .metric-val{font-size:20px;font-weight:500}
-    .metric-val.green{color:var(--c-green)}
-    .metric-val.red{color:var(--c-red)}
-    .metric-val.amber{color:var(--c-amber)}
-    .metric-val.blue{color:var(--c-blue)}
-    .metric-sub{font-size:10px;color:var(--c-muted);margin-top:2px}
-    .risk-bar-wrap{margin-bottom:10px}
-    .risk-label-row{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
-    .risk-bar{height:6px;border-radius:3px;background:var(--c-border)}
-    .risk-fill{height:6px;border-radius:3px}
-    .flag-list{display:flex;flex-direction:column;gap:6px}
-    .flag-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--c-border);font-size:11px}
-    .flag-icon{font-size:14px;flex-shrink:0;margin-top:1px}
-    .flag-title{font-weight:500;margin-bottom:1px}
-    .flag-desc{color:var(--c-muted)}
-    .flag-item.warn{background:var(--c-amber-bg);border-color:var(--c-amber)}
-    .flag-item.ok{background:var(--c-green-bg);border-color:var(--c-green)}
-    .flag-item.danger{background:var(--c-red-bg);border-color:var(--c-red)}
-    .market-table{width:100%;border-collapse:collapse;font-size:11px}
-    .market-table th{color:var(--c-muted);font-weight:500;padding:4px 6px;text-align:left;border-bottom:0.5px solid var(--c-border)}
-    .market-table td{padding:5px 6px;border-bottom:0.5px solid var(--c-border)}
-    .up{color:var(--c-green)}
-    .dn{color:var(--c-red)}
-    .memo-section{padding:16px 20px;border-bottom:0.5px solid var(--c-border)}
-    .memo-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-    .memo-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-    .chip{font-size:10px;padding:3px 8px;border-radius:20px;border:0.5px solid var(--c-border);background:var(--c-bg2);color:var(--c-muted)}
-    .memo-body{font-size:12px;line-height:1.65;color:var(--c-text);background:var(--c-bg2);border:0.5px solid var(--c-border);border-radius:var(--border-radius-md);padding:12px;max-height:120px;overflow-y:auto}
-    .memo-body p{margin-bottom:6px}
-    .memo-body strong{font-weight:500}
-    .footer{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;font-size:10px;color:var(--c-muted)}
-    .footer-stack{display:flex;gap:10px;flex-wrap:wrap}
-    .stack-item{display:flex;align-items:center;gap:3px}
-    .stack-dot{width:6px;height:6px;border-radius:50%}
-    .score-ring{position:relative;display:inline-flex;align-items:center;justify-content:center}
-    .score-label{position:absolute;text-align:center}
-    .score-val{font-size:22px;font-weight:500}
-    .score-sub{font-size:10px;color:var(--c-muted)}
-    .agent-detail{display:none;padding:12px 20px;background:var(--c-bg2);border-bottom:0.5px solid var(--c-border)}
-    .agent-detail.visible{display:block}
-    .detail-title{font-size:12px;font-weight:500;margin-bottom:6px}
-    .detail-steps{display:flex;flex-direction:column;gap:4px}
-    .detail-step{font-size:11px;color:var(--c-muted);padding:4px 8px;border-left:2px solid var(--c-border);display:flex;align-items:center;gap:6px}
-    .detail-step.done{border-color:var(--c-green)}
-    .detail-step .ds-icon{font-size:13px}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinDueDiligence AI — Multi-Agent Investment Analysis Dashboard</title>
+<link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --c-bg:#FFFFFF;
+  --c-bg2:#F5F6F7;
+  --c-border:#E3E5E8;
+  --c-text:#1A1A1A;
+  --c-muted:#6B7280;
+  --border-radius-md:8px;
+  --c-blue:#185FA5;--c-blue-bg:#E6F1FB;--c-green:#3B6D11;--c-green-bg:#EAF3DE;--c-amber:#BA7517;--c-amber-bg:#FAEEDA;--c-red:#A32D2D;--c-red-bg:#FCEBEB;--c-purple:#534AB7;--c-purple-bg:#EEEDFE;--c-teal:#0F6E56;--c-teal-bg:#E1F5EE;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --c-bg:#1A1A1A;
+    --c-bg2:#242528;
+    --c-border:#3A3B3E;
+    --c-text:#F0F0F0;
+    --c-muted:#9CA3AF;
+    --c-blue:#85B7EB;--c-blue-bg:#0C447C;--c-green:#97C459;--c-green-bg:#27500A;--c-amber:#EF9F27;--c-amber-bg:#633806;--c-red:#F09595;--c-red-bg:#791F1F;--c-purple:#AFA9EC;--c-purple-bg:#3C3489;--c-teal:#5DCAA5;--c-teal-bg:#085041
+  }
+}
+html,body{background:var(--c-bg)}
+body{font-family:"Inter","Segoe UI",Helvetica,Arial,sans-serif;background:var(--c-bg);color:var(--c-text);font-size:14px;max-width:1100px;margin:0 auto;min-height:100vh}
+.header{padding:16px 20px 12px;border-bottom:0.5px solid var(--c-border)}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.logo{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500}
+.logo-dot{width:10px;height:10px;border-radius:50%;background:var(--c-blue)}
+.status-row{display:flex;gap:8px;flex-wrap:wrap}
+.badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+.badge-live{background:var(--c-green-bg);color:var(--c-green)}
+.badge-ai{background:var(--c-purple-bg);color:var(--c-purple)}
+.badge-warn{background:var(--c-amber-bg);color:var(--c-amber)}
+.badge-risk{background:var(--c-red-bg);color:var(--c-red)}
+
+.pipeline{display:flex;align-items:stretch;gap:0;padding:14px 20px;border-bottom:0.5px solid var(--c-border);overflow-x:auto}
+.agent{flex:1;min-width:100px;padding:10px 8px;border:0.5px solid var(--c-border);background:var(--c-bg2);border-radius:var(--border-radius-md);position:relative;cursor:pointer;transition:border-color .2s}
+.agent:hover{border-color:var(--c-text)}
+.agent.active{border-color:var(--c-purple);background:var(--c-purple-bg)}
+.agent-arrow{display:flex;align-items:center;padding:0 4px;color:var(--c-muted);font-size:16px;flex-shrink:0}
+.agent-icon{font-size:18px;margin-bottom:4px}
+.agent-name{font-size:11px;font-weight:500;color:var(--c-text);margin-bottom:2px}
+.agent-model{font-size:10px;color:var(--c-purple)}
+.agent-api{font-size:10px;color:var(--c-muted)}
+.ai-badge{position:absolute;top:5px;right:5px;font-size:9px;background:var(--c-purple-bg);color:var(--c-purple);padding:1px 5px;border-radius:10px;font-weight:500}
+
+.main{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:0.5px solid var(--c-border)}
+.panel{padding:16px 20px;border-right:0.5px solid var(--c-border)}
+.panel:last-child{border-right:none}
+.panel-title{font-size:12px;font-weight:500;color:var(--c-muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.ai-tag{font-size:9px;background:var(--c-purple-bg);color:var(--c-purple);padding:2px 6px;border-radius:10px;font-weight:500;text-transform:none;letter-spacing:0}
+
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.metric{background:var(--c-bg2);border-radius:var(--border-radius-md);padding:10px 12px}
+.metric-label{font-size:11px;color:var(--c-muted);margin-bottom:4px}
+.metric-val{font-size:20px;font-weight:500}
+.metric-val.green{color:var(--c-green)}
+.metric-val.red{color:var(--c-red)}
+.metric-val.amber{color:var(--c-amber)}
+.metric-val.blue{color:var(--c-blue)}
+.metric-sub{font-size:10px;color:var(--c-muted);margin-top:2px}
+
+.risk-bar-wrap{margin-bottom:10px}
+.risk-label-row{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
+.risk-bar{height:6px;border-radius:3px;background:var(--c-border)}
+.risk-fill{height:6px;border-radius:3px}
+
+.flag-list{display:flex;flex-direction:column;gap:6px}
+.flag-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--c-border);font-size:11px}
+.flag-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.flag-title{font-weight:500;margin-bottom:1px}
+.flag-desc{color:var(--c-muted)}
+.flag-item.warn{background:var(--c-amber-bg);border-color:var(--c-amber)}
+.flag-item.ok{background:var(--c-green-bg);border-color:var(--c-green)}
+.flag-item.danger{background:var(--c-red-bg);border-color:var(--c-red)}
+
+.market-table{width:100%;border-collapse:collapse;font-size:11px}
+.market-table th{color:var(--c-muted);font-weight:500;padding:4px 6px;text-align:left;border-bottom:0.5px solid var(--c-border)}
+.market-table td{padding:5px 6px;border-bottom:0.5px solid var(--c-border)}
+.up{color:var(--c-green)}
+.dn{color:var(--c-red)}
+
+.memo-section{padding:16px 20px;border-bottom:0.5px solid var(--c-border)}
+.memo-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.memo-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip{font-size:10px;padding:3px 8px;border-radius:20px;border:0.5px solid var(--c-border);background:var(--c-bg2);color:var(--c-muted)}
+.memo-body{font-size:12px;line-height:1.65;color:var(--c-text);background:var(--c-bg2);border:0.5px solid var(--c-border);border-radius:var(--border-radius-md);padding:12px;max-height:120px;overflow-y:auto}
+.memo-body p{margin-bottom:6px}
+.memo-body strong{font-weight:500}
+
+.footer{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;font-size:10px;color:var(--c-muted);flex-wrap:wrap;gap:8px}
+.footer-stack{display:flex;gap:10px;flex-wrap:wrap}
+.stack-item{display:flex;align-items:center;gap:3px}
+.stack-dot{width:6px;height:6px;border-radius:50%}
+
+.score-ring{position:relative;display:inline-flex;align-items:center;justify-content:center}
+.score-label{position:absolute;text-align:center}
+.score-val{font-size:22px;font-weight:500}
+.score-sub{font-size:10px;color:var(--c-muted)}
+
+.agent-detail{display:none;padding:12px 20px;background:var(--c-bg2);border-bottom:0.5px solid var(--c-border)}
+.agent-detail.visible{display:block}
+.detail-title{font-size:12px;font-weight:500;margin-bottom:6px}
+.detail-steps{display:flex;flex-direction:column;gap:4px}
+.detail-step{font-size:11px;color:var(--c-muted);padding:4px 8px;border-left:2px solid var(--c-border);display:flex;align-items:center;gap:6px}
+.detail-step.done{border-color:var(--c-green)}
+.detail-step .ds-icon{font-size:13px}
+
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+@media (max-width: 700px){
+  .main{grid-template-columns:1fr}
+  .panel{border-right:none;border-bottom:0.5px solid var(--c-border)}
+  .panel:last-child{border-bottom:none}
+}
+</style>
 </head>
 <body>
+
+<h2 class="sr-only">Multi-Agent Financial Due Diligence Dashboard — AI-powered investment analysis system with 5 specialized agents</h2>
 
 <div class="header">
   <div class="header-top">
@@ -97,8 +134,8 @@
     <div style="font-size:11px;color:var(--c-muted)">Target: <strong style="color:var(--c-text)">NVDA · Nvidia Corp</strong> &nbsp;|&nbsp; <span id="clock"></span></div>
   </div>
   <div class="status-row">
-    <span class="badge badge-ai"><i class="ti ti-cpu"></i> GPT-4o Powered</span>
-    <span class="badge badge-live"><i class="ti ti-circle-filled" style="font-size:8px"></i> 5 Agents Active</span>
+    <span class="badge badge-ai"><i class="ti ti-cpu" aria-hidden="true"></i> GPT-4o Powered</span>
+    <span class="badge badge-live"><i class="ti ti-circle-filled" style="font-size:8px" aria-hidden="true"></i> 5 Agents Active</span>
     <span class="badge badge-ai">LangChain Orchestration</span>
     <span class="badge badge-warn">SEC EDGAR · Bloomberg · Polygon.io</span>
     <span class="badge badge-ai">Pinecone Vector DB</span>
@@ -106,10 +143,10 @@
   </div>
 </div>
 
-<div class="pipeline">
+<div class="pipeline" role="region" aria-label="AI agent pipeline">
   <div class="agent active" id="ag0" onclick="selectAgent(0)">
     <span class="ai-badge">AI</span>
-    <div class="agent-icon"><i class="ti ti-file-search"></i></div>
+    <div class="agent-icon"><i class="ti ti-file-search" aria-hidden="true"></i></div>
     <div class="agent-name">Document Agent</div>
     <div class="agent-model">GPT-4o + RAG</div>
     <div class="agent-api">SEC EDGAR API</div>
@@ -117,7 +154,7 @@
   <div class="agent-arrow">→</div>
   <div class="agent" id="ag1" onclick="selectAgent(1)">
     <span class="ai-badge">AI</span>
-    <div class="agent-icon"><i class="ti ti-shield-exclamation"></i></div>
+    <div class="agent-icon"><i class="ti ti-shield-exclamation" aria-hidden="true"></i></div>
     <div class="agent-name">Risk Agent</div>
     <div class="agent-model">GPT-4o Scoring</div>
     <div class="agent-api">Refinitiv API</div>
@@ -125,7 +162,7 @@
   <div class="agent-arrow">→</div>
   <div class="agent" id="ag2" onclick="selectAgent(2)">
     <span class="ai-badge">AI</span>
-    <div class="agent-icon"><i class="ti ti-chart-line"></i></div>
+    <div class="agent-icon"><i class="ti ti-chart-line" aria-hidden="true"></i></div>
     <div class="agent-name">Market Agent</div>
     <div class="agent-model">GPT-4o + Tools</div>
     <div class="agent-api">Polygon.io · Bloomberg</div>
@@ -133,7 +170,7 @@
   <div class="agent-arrow">→</div>
   <div class="agent" id="ag3" onclick="selectAgent(3)">
     <span class="ai-badge">AI</span>
-    <div class="agent-icon"><i class="ti ti-license"></i></div>
+    <div class="agent-icon"><i class="ti ti-license" aria-hidden="true"></i></div>
     <div class="agent-name">Compliance Agent</div>
     <div class="agent-model">GPT-4o Classifier</div>
     <div class="agent-api">SEC EDGAR · Internal</div>
@@ -141,7 +178,7 @@
   <div class="agent-arrow">→</div>
   <div class="agent" id="ag4" onclick="selectAgent(4)">
     <span class="ai-badge">AI</span>
-    <div class="agent-icon"><i class="ti ti-writing"></i></div>
+    <div class="agent-icon"><i class="ti ti-writing" aria-hidden="true"></i></div>
     <div class="agent-name">Synthesis Agent</div>
     <div class="agent-model">GPT-4o Writer</div>
     <div class="agent-api">Investment Memo</div>
@@ -155,12 +192,14 @@
 
 <div class="main">
   <div class="panel">
-    <div class="panel-title"><i class="ti ti-shield"></i> Risk Agent Output <span class="ai-tag">AI Scored</span></div>
+    <div class="panel-title"><i class="ti ti-shield" aria-hidden="true"></i> Risk Agent Output <span class="ai-tag">AI Scored</span></div>
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px">
       <div class="score-ring">
-        <svg width="80" height="80" viewBox="0 0 80 80">
+        <svg width="80" height="80" viewBox="0 0 80 80" aria-hidden="true">
           <circle cx="40" cy="40" r="32" fill="none" stroke="var(--c-border)" stroke-width="6"/>
-          <circle cx="40" cy="40" r="32" fill="none" stroke="#639922" stroke-width="6" stroke-dasharray="134" stroke-dashoffset="34" stroke-linecap="round" transform="rotate(-90 40 40)"/>
+          <circle cx="40" cy="40" r="32" fill="none" stroke="#639922" stroke-width="6"
+            stroke-dasharray="134" stroke-dashoffset="34" stroke-linecap="round"
+            transform="rotate(-90 40 40)"/>
         </svg>
         <div class="score-label">
           <div class="score-val" style="color:var(--c-green)">74</div>
@@ -189,10 +228,11 @@
       <div class="risk-label-row"><span>Operational Risk</span><span style="font-weight:500;color:var(--c-red)">71%</span></div>
       <div class="risk-bar"><div class="risk-fill" style="width:71%;background:var(--c-red)"></div></div>
     </div>
+    <div style="font-size:10px;color:var(--c-muted);margin-top:6px">Source: Refinitiv · GPT-4o NLP scoring on 2024 filings</div>
   </div>
 
   <div class="panel" style="border-right:none">
-    <div class="panel-title"><i class="ti ti-trending-up"></i> Market Agent Live Data <span class="ai-tag">AI Pulled</span></div>
+    <div class="panel-title"><i class="ti ti-trending-up" aria-hidden="true"></i> Market Agent Live Data <span class="ai-tag">AI Pulled</span></div>
     <div class="metric-grid">
       <div class="metric">
         <div class="metric-label">Price (NVDA)</div>
@@ -215,7 +255,7 @@
         <div class="metric-sub">vs $404 low</div>
       </div>
     </div>
-    <table class="market-table">
+    <table class="market-table" aria-label="Comparable companies">
       <thead><tr><th>Comparable</th><th>Price</th><th>Chg</th><th>P/E</th></tr></thead>
       <tbody>
         <tr><td>AMD</td><td>$168.40</td><td class="up">+1.1%</td><td>48x</td></tr>
@@ -224,12 +264,13 @@
         <tr><td>TSMC</td><td>$183.50</td><td class="up">+1.9%</td><td>30x</td></tr>
       </tbody>
     </table>
+    <div style="font-size:10px;color:var(--c-muted);margin-top:6px">Data via Polygon.io · Bloomberg API · GPT-4o tool use</div>
   </div>
 </div>
 
-<div class="main">
+<div class="main" style="border-bottom:0.5px solid var(--c-border)">
   <div class="panel">
-    <div class="panel-title"><i class="ti ti-license"></i> Compliance Agent <span class="ai-tag">AI Flags</span></div>
+    <div class="panel-title"><i class="ti ti-license" aria-hidden="true"></i> Compliance Agent <span class="ai-tag">AI Flags</span></div>
     <div class="flag-list">
       <div class="flag-item ok">
         <div class="flag-icon">✅</div>
@@ -239,6 +280,10 @@
         <div class="flag-icon">⚠️</div>
         <div><div class="flag-title" style="color:var(--c-amber)">Export Controls Risk</div><div class="flag-desc">AI-detected BIS regulations concern re: China chip exports (8-K, Oct 2023)</div></div>
       </div>
+      <div class="flag-item ok">
+        <div class="flag-icon">✅</div>
+        <div><div class="flag-title" style="color:var(--c-green)">SEC Filing — Current</div><div class="flag-desc">All 10-K, 10-Q, 8-K filings up to date via EDGAR API</div></div>
+      </div>
       <div class="flag-item danger">
         <div class="flag-icon">🚩</div>
         <div><div class="flag-title" style="color:var(--c-red)">Antitrust Investigation</div><div class="flag-desc">GPT-4o flagged DOJ inquiry mentions in proxy statement language</div></div>
@@ -246,15 +291,23 @@
     </div>
   </div>
   <div class="panel" style="border-right:none">
-    <div class="panel-title"><i class="ti ti-file-text"></i> Document Agent Extractions <span class="ai-tag">RAG + GPT-4o</span></div>
+    <div class="panel-title"><i class="ti ti-file-text" aria-hidden="true"></i> Document Agent Extractions <span class="ai-tag">RAG + GPT-4o</span></div>
     <div class="flag-list">
       <div class="flag-item ok">
-        <div class="flag-icon"><i class="ti ti-file"></i></div>
+        <div class="flag-icon"><i class="ti ti-file" aria-hidden="true"></i></div>
         <div><div class="flag-title" style="color:var(--c-green)">10-K 2024 Processed</div><div class="flag-desc">142 pages → Pinecone embeddings → key KPIs extracted</div></div>
       </div>
+      <div class="flag-item ok">
+        <div class="flag-icon"><i class="ti ti-file" aria-hidden="true"></i></div>
+        <div><div class="flag-title" style="color:var(--c-green)">10-Q Q3 2024 Processed</div><div class="flag-desc">Revenue: $18.1B (+122% YoY) — GPT-4o NLP extraction</div></div>
+      </div>
       <div class="flag-item warn">
-        <div class="flag-icon"><i class="ti ti-file"></i></div>
+        <div class="flag-icon"><i class="ti ti-file" aria-hidden="true"></i></div>
         <div><div class="flag-title" style="color:var(--c-amber)">8-K Oct 2023 — Flagged</div><div class="flag-desc">Export restriction disclosure detected by AI classifier</div></div>
+      </div>
+      <div class="flag-item ok">
+        <div class="flag-icon"><i class="ti ti-database" aria-hidden="true"></i></div>
+        <div><div class="flag-title" style="color:var(--c-blue)">Pinecone Vector Store</div><div class="flag-desc">2,840 chunks indexed · Redis cache: 847 queries served</div></div>
       </div>
     </div>
   </div>
@@ -262,37 +315,105 @@
 
 <div class="memo-section">
   <div class="memo-header">
-    <div class="panel-title" style="margin:0"><i class="ti ti-writing"></i> Synthesis Agent — Investment Memo <span class="ai-tag">GPT-4o Generated</span></div>
+    <div class="panel-title" style="margin:0"><i class="ti ti-writing" aria-hidden="true"></i> Synthesis Agent — Investment Memo <span class="ai-tag">GPT-4o Generated</span></div>
+    <span class="badge badge-ai">Auto-generated · LangChain</span>
+  </div>
+  <div class="memo-chips">
+    <span class="chip">Nvidia Corp (NVDA)</span>
+    <span class="chip">Semiconductor</span>
+    <span class="chip">Large Cap</span>
+    <span class="chip">Risk: Low-Medium</span>
+    <span class="chip">Analyst: AI Synthesis Agent</span>
+    <span class="chip">Confidence: 87%</span>
   </div>
   <div class="memo-body">
-    <p><strong>Executive Summary:</strong> Nvidia Corporation presents a compelling investment case driven by dominant market positioning in AI accelerators and data center GPUs.</p>
+    <p><strong>Executive Summary:</strong> Nvidia Corporation presents a compelling investment case driven by dominant market positioning in AI accelerators and data center GPUs. The Synthesis Agent has aggregated outputs from all four upstream agents to produce this memo.</p>
+    <p><strong>Financial Strength (Document Agent):</strong> Q3 FY2024 revenue of $18.1B reflects 122% YoY growth, driven by Data Center segment (+279%). Gross margins expanded to 74.6%. Balance sheet carries $18.3B cash with manageable debt levels.</p>
+    <p><strong>Risk Assessment (Risk Agent — GPT-4o scored):</strong> Overall credit risk score of 74/100 (Low-Medium). Primary concern is elevated operational risk (71%) related to supply chain concentration and export restrictions. Market risk moderate at 62% given valuation premium.</p>
+    <p><strong>Market Position (Market Agent):</strong> NVDA trades at 68.4x P/E vs sector median of 30x, reflecting growth premium. Peers AMD and QCOM trade at 48x and 22x respectively. Bloomberg data confirms sustained institutional accumulation.</p>
+    <p><strong>Compliance (Compliance Agent):</strong> Two regulatory flags identified — ongoing DOJ antitrust inquiry and BIS export restrictions impact on China revenue (~25% of total). SOX compliance maintained. All SEC filings current.</p>
+    <p><strong>AI Recommendation:</strong> OUTPERFORM. Initiate position with 12-month price target of $1,100 based on 75x FY2025E EPS of $14.60. Key risk: geopolitical escalation affecting China export licenses. Monitor DOJ investigation outcome.</p>
   </div>
 </div>
 
 <div class="footer">
   <div class="footer-stack">
     <span style="font-weight:500;color:var(--c-text)">Tech Stack:</span>
-    <span>LangChain · GPT-4o · Pinecone · FastAPI · React</span>
+    <span class="stack-item"><span class="stack-dot" style="background:var(--c-purple)"></span>LangChain</span>
+    <span class="stack-item"><span class="stack-dot" style="background:var(--c-blue)"></span>GPT-4o</span>
+    <span class="stack-item"><span class="stack-dot" style="background:var(--c-teal)"></span>Pinecone</span>
+    <span class="stack-item"><span class="stack-dot" style="background:var(--c-amber)"></span>Redis</span>
+    <span class="stack-item"><span class="stack-dot" style="background:var(--c-green)"></span>React</span>
+    <span class="stack-item"><span class="stack-dot" style="background:#888"></span>SEC EDGAR</span>
+    <span class="stack-item"><span class="stack-dot" style="background:#888"></span>Bloomberg</span>
+    <span class="stack-item"><span class="stack-dot" style="background:#888"></span>Polygon.io</span>
   </div>
+  <div>Python · FastAPI · Docker</div>
 </div>
 
 <script>
 const agents=[
   {title:"Document Agent — SEC EDGAR filing extraction via RAG pipeline",steps:[
     {icon:"✅",text:"SEC EDGAR API → 10-K, 10-Q, 8-K fetched",done:true},
-    {icon:"✅",text:"GPT-4o embeddings → Pinecone vector store",done:true}
+    {icon:"✅",text:"PDF → text chunking (LangChain TextSplitter)",done:true},
+    {icon:"✅",text:"GPT-4o embeddings → Pinecone vector store",done:true},
+    {icon:"✅",text:"RAG query: financial KPIs, risk disclosures",done:true},
+    {icon:"✅",text:"Redis cache: results stored for downstream agents",done:true},
   ]},
   {title:"Risk Agent — GPT-4o credit & exposure scoring",steps:[
-    {icon:"✅",text:"GPT-4o prompt: score market, credit, liquidity, ops risk",done:true}
+    {icon:"✅",text:"Pulls extracted financials from Document Agent via Redis",done:true},
+    {icon:"✅",text:"GPT-4o prompt: score market, credit, liquidity, ops risk",done:true},
+    {icon:"✅",text:"Refinitiv API: industry benchmark comparison",done:true},
+    {icon:"✅",text:"Outputs numeric risk scores (0-100) per category",done:true},
+    {icon:"✅",text:"Flags high-risk items → Compliance Agent queue",done:true},
+  ]},
+  {title:"Market Agent — Live data via Bloomberg & Polygon.io",steps:[
+    {icon:"✅",text:"Polygon.io API: real-time price, volume, market cap",done:true},
+    {icon:"✅",text:"Bloomberg API: P/E, analyst ratings, institutional flows",done:true},
+    {icon:"✅",text:"GPT-4o tool_use: selects right API per query",done:true},
+    {icon:"✅",text:"Peer comparison: AMD, Intel, QCOM, TSMC pulled",done:true},
+    {icon:"✅",text:"Results cached in Redis → passed to Synthesis Agent",done:true},
+  ]},
+  {title:"Compliance Agent — Regulatory flag detection via AI classifier",steps:[
+    {icon:"✅",text:"GPT-4o classifier scans all SEC filings for risk language",done:true},
+    {icon:"✅",text:"BIS export control pattern matching on 8-K disclosures",done:true},
+    {icon:"✅",text:"DOJ / antitrust language detected in proxy statement",done:true},
+    {icon:"✅",text:"SOX internal control section verified — no weaknesses",done:true},
+    {icon:"✅",text:"Flags serialized → Synthesis Agent with severity scores",done:true},
+  ]},
+  {title:"Synthesis Agent — GPT-4o investment memo generation",steps:[
+    {icon:"✅",text:"Aggregates: Document + Risk + Market + Compliance outputs",done:true},
+    {icon:"✅",text:"LangChain chain: structured prompt with all agent data",done:true},
+    {icon:"✅",text:"GPT-4o generates investment memo (Executive Summary format)",done:true},
+    {icon:"✅",text:"Confidence score via ensemble of agent certainty values",done:true},
+    {icon:"✅",text:"Memo stored → React frontend rendered",done:true},
   ]}
 ];
+let activeAgent=0;
 function selectAgent(i){
+  activeAgent=i;
   document.querySelectorAll('.agent').forEach((a,j)=>a.classList.toggle('active',j===i));
+  const a=agents[i];
+  document.getElementById('detail-title').textContent=a.title;
+  document.getElementById('detail-steps').innerHTML=a.steps.map(s=>`<div class="detail-step ${s.done?'done':''}"><span class="ds-icon">${s.icon}</span>${s.text}</div>`).join('');
+  document.getElementById('detail-panel').classList.add('visible');
 }
+selectAgent(0);
+
 function tick(){
-  document.getElementById('clock').textContent=new Date().toLocaleTimeString();
+  const now=new Date();
+  document.getElementById('clock').textContent=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
-tick(); setInterval(tick,1000);
+tick();setInterval(tick,1000);
+
+let prices=[924.30];
+setInterval(()=>{
+  const last=prices[prices.length-1];
+  const next=+(last+(Math.random()-0.48)*1.2).toFixed(2);
+  prices.push(next);
+  const el=document.getElementById('price');
+  if(el) el.textContent='$'+next.toFixed(2);
+},4000);
 </script>
 </body>
 </html>
